@@ -20,7 +20,7 @@ jobs:
           playwright install chromium
       - name: Check public profile
         env:
-          TARGET_USERNAME: ${{ secrets.TARGET_USERNAME }}
+          TARGET_USERNAME: ${{ secrets.TARGET_VITA }}
         run: |
           python - <<'PY'
           import os, re, sys
