@@ -1,0 +1,38 @@
+name: Source connectivity check
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+      - name: Check public profile
+        env:
+          TARGET_USERNAME: ${{ secrets.TARGET_USERNAME }}
+        run: |
+          python - <<'PY'
+          import os, re, sys
+          from playwright.sync_api import sync_playwright
+          name = os.environ.get("TARGET_USERNAME", "").strip().lstrip("@")
+          if not re.fullmatch(r"[A-Za-z0-9_]{1,15}", name):
+              sys.exit("TARGET_USERNAME is missing or invalid")
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
+              page.goto("https://x.com/" + name, wait_until="domcontentloaded", timeout=45000)
+              try:
+                  page.locator('article a[href*="/status/"]').first.wait_for(timeout=30000)
+              except Exception:
+                  sys.exit("Could not read public posts. The site may require sign-in or restrict this runner.")
+              print("Public post links are visible; connectivity test passed.")
+              browser.close()
+          PY
