@@ -1,6 +1,9 @@
 name: Source connectivity check
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/source-check.yml'
 permissions:
   contents: read
 jobs:
